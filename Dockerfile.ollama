@@ -1,0 +1,10 @@
+FROM ollama/ollama:latest
+
+# Configuración para descargar modelos al iniciar
+ENV OLLAMA_HOST 0.0.0.0:11434
+
+# Script que maneja la descarga Y el servicio
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

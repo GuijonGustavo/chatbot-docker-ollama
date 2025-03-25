@@ -1,0 +1,19 @@
+FROM python:3.9-slim
+
+# 1. Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y git gcc python3-dev && rm -rf /var/lib/apt/lists/*
+
+# 2. Instalar ChromaDB con versión específica y dependencias
+RUN pip install --no-cache-dir \
+    numpy==1.23.5 \
+    chromadb==0.4.22 \
+    httpx==0.24.1 \
+    google-auth==2.17.3 \
+    pillow==9.5.0
+
+# 3. Configurar ChromaDB
+RUN mkdir -p /chroma/chroma-data
+VOLUME /chroma/chroma-data
+EXPOSE 8000
+
+CMD ["chroma", "run", "--path", "/chroma/chroma-data", "--host", "0.0.0.0", "--port", "8000"]
