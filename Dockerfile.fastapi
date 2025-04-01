@@ -12,5 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 3. Copiar aplicación
 COPY app/ /app
 
-EXPOSE 5000
-CMD ["python", "main.py"]
+# Exponer el puerto en el que la aplicación FastAPI correrá
+EXPOSE 8000
+
+# Iniciar FastAPI con Uvicorn (en lugar de usar 'python main.py')
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+

@@ -1,19 +1,21 @@
 services:
-  flask-chatbot:
+  fastapi-chatbot:
     build:
       context: .
-      dockerfile: Dockerfile.flask  
-    container_name: flask-chatbot
+      dockerfile: Dockerfile.fastapi  # Se mantiene el nombre del archivo, pero apunta al Dockerfile de FastAPI
+    container_name: fastapi-chatbot
     volumes:
       - ./app:/app
     ports:
-      - "5000:5000"
+      - "8000:8000"  # Cambiamos el puerto a 8000, que es el estándar para FastAPI
     depends_on:
       chromadb:
-        condition: service_started  
+        condition: service_started
     environment:
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
+    networks:
+      - chatbot-network
 
   chromadb:
     build:
@@ -23,12 +25,14 @@ services:
     volumes:
       - chromadb_data:/chroma
     ports:
-      - "8000:8000"
+      - "8001:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/heartbeat"]
       interval: 30s
       timeout: 30s
       retries: 5
+    networks:
+      - chatbot-network
 
   nginx:
     image: nginx:latest
@@ -39,7 +43,9 @@ services:
       - ./conf.d/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
-      - flask-chatbot
+      - fastapi-chatbot
+    networks:
+      - chatbot-network
 
   opensearch:
     image: opensearchproject/opensearch:2.10.0
@@ -77,24 +83,25 @@ services:
       retries: 3
 
   ollama:
-      build:
-        context: .
-        dockerfile: Dockerfile.ollama
-      ports:
-        - "11434:11434"
-      volumes:
-        - ollama_data:/root/.ollama
-      restart: unless-stopped
-      deploy:
-        resources:
-          reservations:
-            memory: 2G  # Suficiente para TinyLlama
-      healthcheck:
-        test: ["CMD", "ollama", "list"]
-        interval: 30s
-        timeout: 30s
-        start_period: 2m
-
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          memory: 2G  # Suficiente para TinyLlama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 30s
+      start_period: 2m
+    networks:
+      - chatbot-network
 
 volumes:
   chromadb_data:
@@ -105,3 +112,4 @@ volumes:
 networks:
   chatbot-network:
     driver: bridge
+
