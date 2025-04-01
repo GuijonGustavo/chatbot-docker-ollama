@@ -38,14 +38,6 @@ async def before_request(request: Request, call_next):
     response = await call_next(request)
     return response
 
-
-
-
-
-
-
-
-
 @app.get("/")
 async def home():
     return "¡Hola, FastAPI está funcionando!"
@@ -127,5 +119,5 @@ async def query(query_request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000, debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
 
