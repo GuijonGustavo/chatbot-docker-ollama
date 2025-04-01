@@ -1,77 +1,80 @@
-```markdown
-# 🚀 Chatbot con Flask, ChromaDB y Ollama
+# Chatbot con FastAPI y ChromaDB
 
-## 🌟 Características
-- **Backend**: Flask (Python)
-- **Vector DB**: ChromaDB
-- **LLM**: Ollama con TinyLlama preconfigurado
-- **Búsqueda**: OpenSearch
-- **Caché**: Redis
-- **Proxy**: Nginx
+Este proyecto implementa un chatbot utilizando FastAPI como backend y ChromaDB para la gestión de documentos y consultas.
 
-## 🛠 Stack Tecnológico
-| Servicio    | Versión   | Puerto | Uso                     |
-|-------------|-----------|--------|-------------------------|
-| Flask       | 3.0       | 5000   | API principal           |
-| ChromaDB    | 0.4.22    | 8000   | DB vectorial            |
-| Ollama      | latest    | 11434  | Modelos LLM             |
-| OpenSearch  | 2.10.0    | 9200   | Motor de búsqueda       |
-| Redis       | 7.0       | 6379   | Caché                   |
-| Nginx       | latest    | 80     | Reverse proxy           |
+## Características de esta versión (`fastapi`)
 
-## 🚀 Instalación Rápida
+- Implementación con **FastAPI** como framework principal.
+- Uso de **ChromaDB** para almacenamiento y recuperación de documentos.
+- **CORS habilitado** para permitir accesos desde distintos orígenes.
+- Endpoints para **almacenamiento**, **búsqueda**, y **verificación de estado**.
+- Contenedor Docker para ejecutar la aplicación.
+
+## Endpoints y pruebas con `curl`
+
+### 1️⃣ Verificar si el servicio está corriendo
 ```bash
-git clone https://github.com/tu-usuario/flask-chatbot-llama.git
-cd flask-chatbot-llama
-docker-compose up --build -d
+curl -X GET http://localhost:8000/
+```
+#### 📌 Respuesta esperada:
+```json
+"¡Hola, FastAPI está funcionando!"
 ```
 
-## 🔍 Endpoints
-- `http://localhost` → Nginx (Frontend)
-- `http://localhost:5000` → Flask API
-- `http://localhost:8000` → ChromaDB
-- `http://localhost:11434` → Ollama API
-
-## 🤖 Ejemplo de Uso
+### 2️⃣ Verificar el estado de ChromaDB
 ```bash
-curl -X POST "http://localhost/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Explica Docker en 10 palabras"}'
+curl -X GET http://localhost:8000/health
+```
+#### 📌 Respuesta esperada si ChromaDB está disponible:
+```json
+{
+    "status": "healthy",
+    "services": {"chromadb": "available"}
+}
 ```
 
-## ⚙️ Configuración
-### Variables clave en `.env`:
-```ini
-OLLAMA_MODELS=tinyllama
-CHROMA_HOST=chromadb
-OPENSEARCH_HOST=opensearch
-```
-
-## 🛠️ Comandos útiles
+### 3️⃣ Almacenar documentos en ChromaDB
 ```bash
-# Ver logs
-docker-compose logs -f
-
-# Reiniciar servicios
-docker-compose restart
-
-# Eliminar todo
-docker-compose down -v
+curl -X POST http://localhost:8000/store \
+     -H "Content-Type: application/json" \
+     -d '{"documents": [{"text": "Ejemplo de documento"}]}'
+```
+#### 📌 Respuesta esperada:
+```json
+{
+    "status": "success",
+    "message": "Documents added successfully",
+    "documents_added": 1
+}
 ```
 
-## 📊 Estructura del Proyecto
+### 4️⃣ Consultar documentos en ChromaDB
+```bash
+curl -X POST http://localhost:8000/query \
+     -H "Content-Type: application/json" \
+     -d '{"query": "Ejemplo", "collection": "default", "n_results": 3}'
 ```
-.
-├── app/
-│   ├── main.py           # Lógica Flask
-│   └── requirements.txt
-├── conf.d/
-│   └── default.conf      # Config Nginx
-├── docker-compose.yml    # Servicios
-└── Dockerfiles/          # Config por servicio
+#### 📌 Respuesta esperada (si hay documentos coincidentes):
+```json
+{
+    "status": "success",
+    "results": { "documents": ["Ejemplo de documento"] }
+}
 ```
 
-## 📄 Licencia
-MIT License - Ver [LICENSE](LICENSE)
+## 📌 Notas
+- La aplicación está configurada para ejecutarse en el puerto **8000**.
+- **ChromaDB** debe estar corriendo en el puerto **8001**.
+- Se recomienda probar los endpoints usando **Postman** o `curl`.
+
+## 🚀 Ejecutar con Docker
+Si utilizas Docker, asegúrate de que los contenedores están en ejecución:
+```bash
+docker-compose up -d
 ```
+Puedes verificar los contenedores con:
+```bash
+docker ps
+```
+
 
