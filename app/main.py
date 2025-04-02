@@ -4,9 +4,32 @@ from pydantic import BaseModel
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
+from fastapi import APIRouter
+
 
 # Inicializar FastAPI
 app = FastAPI()
+
+class PromptRequest(BaseModel):
+    model: str = "tinyllama"
+    prompt: str
+    stream: bool = False
+    options: dict = None
+
+@app.post("/api/generate")
+async def generate(prompt_data: PromptRequest):
+    if prompt_data.model != "tinyllama":
+        raise HTTPException(status_code=400, detail="Modelo no soportado")
+    
+    # Aquí tu lógica para llamar a TinyLlama
+    response = call_tinyllama(
+        prompt=prompt_data.prompt,
+        temperature=prompt_data.options.get("temperature", 0.7),
+        max_tokens=prompt_data.options.get("max_tokens", 200)
+    )
+    
+    return {"response": response}
+
 
 # Configuración de ChromaDB
 CHROMA_HOST = "chromadb"
@@ -97,25 +120,42 @@ async def store(documents: list[Document]):
 # Ruta para hacer consultas en ChromaDB
 @app.post("/query")
 async def query(query_request: QueryRequest):
-    """Consulta en ChromaDB"""
-    
+    """Consulta en ChromaDB y genera respuesta para el chatbot"""
+
     query_text = query_request.query
     collection_name = query_request.collection
 
+    # Conectar a ChromaDB
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
     collection = chroma_client.get_or_create_collection(collection_name)
 
     try:
+        # Realizar la consulta
         results = collection.query(
             query_texts=[query_text],
             n_results=query_request.n_results
         )
+
+        # Si no se encontraron resultados
+        if not results['documents']:
+            return {
+                "status": "no_results",
+                "message": "No se encontraron resultados relevantes."
+            }
+
+        # Generar respuesta (puedes agregar lógica más compleja aquí)
+        response_text = "Aquí están los resultados relevantes:\n"
+        for result in results['documents']:
+            response_text += f"- {result}\n"
+
         return {
             "status": "success",
-            "results": results
+            "response": response_text
         }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn

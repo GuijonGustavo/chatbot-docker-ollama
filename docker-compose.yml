@@ -43,7 +43,8 @@ services:
       - "80:80"
     volumes:
       - ./conf.d/default.conf:/etc/nginx/conf.d/default.conf
-      - ./nginx.conf:/etc/nginx/nginx.conf
+        #      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend:/usr/share/nginx/html
     depends_on:
       - fastapi-chatbot
     networks:
