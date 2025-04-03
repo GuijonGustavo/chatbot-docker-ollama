@@ -1,166 +1,172 @@
-# Proyecto FastAPI con ChromaDB, Redis, Ollama, Gunicorn y OpenSearch
+```markdown
+# Chatbot Avanzado con Ollama, FastAPI y ChromaDB
 
-Este es un proyecto de ejemplo que utiliza **FastAPI**, **ChromaDB**, **Redis**, **Ollama**, **Gunicorn** y **OpenSearch** para crear una API RESTful que gestiona documentos, consultas y realiza interacciones con Redis y otros servicios.
+![Matrix-style](https://img.shields.io/badge/Style-Matrix_Neon-green) 
+![Docker](https://img.shields.io/badge/Deploy-Docker-2496ED) 
+![Redis](https://img.shields.io/badge/DB-Redis-DC382D) 
+![OpenSearch](https://img.shields.io/badge/DB-OpenSearch-0058CC)
 
-### Características
+## 🌐 Arquitectura del Sistema
 
-- **FastAPI**: Framework rápido para construir APIs con Python.
-- **ChromaDB**: Base de datos para almacenar y consultar documentos.
-- **Redis**: Usado como sistema de caché y con comandos básicos como `PING`.
-- **Ollama**: Servicio para chatbot basado en Ollama.
-- **Gunicorn**: Servidor WSGI para FastAPI.
-- **OpenSearch**: Motor de búsqueda y análisis de datos.
-
----
-
-## Comandos de `curl` con `jq`
-
-### 1. **Verificar la salud de la API**
-
-   Para obtener la respuesta del endpoint de salud (`/health`) y procesarla con `jq`:
-
-   ```bash
-   curl http://localhost:8000/health | jq .
-   ```
-
-   **Respuesta esperada**:
-
-   ```json
-   {
-     "status": "healthy",
-     "services": {
-       "chromadb": "available"
-     }
-   }
-   ```
-
-### 2. **Consulta de documentos en ChromaDB**
-
-   Para realizar una consulta y obtener solo los documentos de la respuesta:
-
-   ```bash
-   curl -X POST "http://localhost:8000/query" -H "Content-Type: application/json" -d '{"query":"documento de prueba","collection":"default","n_results":3}' | jq '.results.documents'
-   ```
-
-   **Respuesta esperada**:
-
-   ```json
-   [
-     "Este es un documento de prueba",
-     "Otro documento de prueba"
-   ]
-   ```
-
-### 3. **Verificar Redis (PING)**
-
-   Para verificar si Redis está activo, puedes usar `netcat` (`nc`) con el siguiente comando:
-
-   ```bash
-   echo -e "PING\r\n" | nc localhost 6379 | jq -R .
-   ```
-
-   **Respuesta esperada**:
-
-   ```json
-   "PONG"
-   ```
-
-### 4. **Consultar Ollama (Chatbot)**
-
-   Para interactuar con el servicio Ollama y enviarle un mensaje:
-
-   ```bash
-   curl -X POST "http://localhost:11434/api/generate" \
-   -H "Content-Type: application/json" \
-   -d '{"model": "mistral", "prompt": "Hola, ¿cómo estás?"}' | jq .
-   ```
-
-   **Respuesta esperada** (dependerá del modelo de Ollama):
-
-   ```json
-   {
-     "response": "¡Hola! Estoy bien, ¿y tú?"
-   }
-   ```
-
-### 5. **Verificar OpenSearch (PING)**
-
-   Para verificar si OpenSearch está funcionando correctamente:
-
-   ```bash
-   curl -XGET 'http://localhost:9200/_cluster/health?pretty' | jq .
-   ```
-
-   **Respuesta esperada**:
-
-   ```json
-   {
-     "cluster_name": "docker-cluster",
-     "status": "green",
-     "timed_out": false,
-     "number_of_nodes": 1,
-     "number_of_data_nodes": 1,
-     "active_primary_shards": 5,
-     "active_shards": 5,
-     "relocating_shards": 0,
-     "initializing_shards": 0,
-     "unassigned_shards": 0,
-     "delayed_unassigned_shards": 0,
-     "number_of_pending_tasks": 0,
-     "number_of_in_flight_fetch": 0,
-     "task_max_waiting_in_queue_millis": 0,
-     "active_shards_percent_as_number": 100.0
-   }
-   ```
-
----
-
-## Despliegue
-
-### 1. **Levantar los servicios con Docker Compose**
-
-Si estás usando Docker Compose, asegúrate de que tu archivo `docker-compose.yml` esté configurado correctamente para los contenedores `fastapi`, `chromadb`, `redis`, `ollama`, `gunicorn`, y `opensearch`. Luego, puedes levantar los servicios con:
-
-```bash
-docker-compose up
+```mermaid
+graph TD
+    A[Frontend] -->|HTTP| B[Nginx]
+    B -->|API| C[FastAPI]
+    C -->|Cache| D[Redis]
+    C -->|Modelos| E[Ollama]
+    C -->|VectorDB| F[ChromaDB]
+    C -->|Búsqueda| G[OpenSearch]
 ```
 
-### 2. **Levantar los servicios manualmente**
+## 🔍 Probar todos los servicios vía CURL
 
-Si no estás usando Docker Compose, puedes levantar los contenedores de la siguiente manera:
+### 1. Ollama (Modelos de IA)
+```bash
+# Probar generación con TinyLlama
+curl -X POST http://localhost:11434/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "tinyllama",
+    "prompt": "Explica el teorema de Pitágoras en español",
+    "stream": false,
+    "options": {"temperature": 0.3}
+  }'
+```
 
-- **FastAPI + Gunicorn**:
+### 2. FastAPI + Gunicorn
+```bash
+# Health Check
+curl "http://localhost:8000/health"
 
-   ```bash
-   docker run -d -p 8000:8000 chatbot-docker-ollama-fastapi-chatbot
-   ```
+# Chat con historial (usando Redis)
+curl -X POST "http://localhost:8000/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "abc123",
+    "message": "Qué es Docker?"
+  }'
+```
 
-   O si necesitas usar **Gunicorn** para la ejecución de FastAPI:
+### 3. ChromaDB (VectorDB)
+```bash
+# Buscar embeddings similares
+curl -X POST "http://localhost:8001/api/similarity" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "embedding": [0.1, 0.2, 0.3],
+    "top_k": 5
+  }'
+```
 
-   ```bash
-   gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000
-   ```
+### 4. Redis (Cache)
+```bash
+# Verificar conexión
+redis-cli -h localhost -p 6379 PING
 
-- **ChromaDB**:
+# Ver datos de sesión
+redis-cli --raw GET "session:abc123"
+```
 
-   ```bash
-   docker run -d -p 8001:8000 chatbot-docker-ollama-chromadb
-   ```
+### 5. OpenSearch
+```bash
+# Buscar documentos
+curl -X GET "http://localhost:9200/my_index/_search?q=tecnología&pretty"
+```
 
-- **Redis**:
+### 6. Nginx
+```bash
+# Verificar configuración
+curl -I "http://localhost" -H "Host: localhost"
 
-   ```bash
-   docker run -d -p 6379:6379 redis:7.0
-   ```
+# Probar balanceo de carga (si aplica)
+for i in {1..5}; do curl -s "http://localhost/api/health"; done
+```
 
-- **Ollama**:
+## 🛠️ Stack Tecnológico Completo
 
-   ```bash
-   docker run -d -p 11434:11434 chatbot-docker-ollama-ollama
-   ```
+| Servicio       | Versión | Puerto  | Uso Principal                |
+|----------------|---------|---------|------------------------------|
+| Ollama         | latest  | 11434   | Modelos de lenguaje          |
+| FastAPI        | 0.95+   | 8000    | API REST                     |
+| Gunicorn       | 20.1+   | 8000    | WSGI Server                  |
+| ChromaDB       | 0.4+    | 8001    | Vector Database              |
+| Redis          | 7.0+    | 6379    | Cache y sesiones             |
+| OpenSearch     | 2.10+   | 9200    | Búsqueda full-text           |
+| Nginx          | 1.25+   | 80/443  | Reverse Proxy                |
 
-- **OpenSearch**:
+## 🐳 Despliegue con Docker Compose
 
-   ```bash
-   docker run -d -p 9200:9200 -p 9600:9600 opensearchproject/opensearch:2.10.0
-   ```
+```bash
+# Iniciar todos los servicios
+docker-compose up -d --build
+
+# Escalar workers de Gunicorn
+docker-compose scale fastapi-worker=4
+
+# Monitorizar servicios
+docker-compose logs -f ollama fastapi nginx
+```
+
+## 🔧 Variables de Entorno Clave
+
+```ini
+# .env
+OLLAMA_MODEL=tinyllama
+REDIS_URL=redis://redis:6379/0
+OPENSEARCH_HOSTS=opensearch:9200
+GUNICORN_WORKERS=4
+NGINX_WORKER_PROCESSES=2
+```
+
+## 📌 Características Clave
+
+1. **Interfaz Matrix-style**
+   - Diseño neón verde/negro
+   - Efectos de terminal interactiva
+   - Soporte para streaming de respuestas
+
+2. **Backend Optimizado**
+   - Cache Redis para sesiones
+   - Balanceo de carga con Nginx
+   - Workers Gunicorn configurables
+
+3. **Búsqueda Híbrida**
+   - ChromaDB para embeddings
+   - OpenSearch para full-text search
+   - Cache multi-nivel
+
+4. **Modelos de IA**
+   - Soporte para múltiples modelos via Ollama
+   - Preprocesamiento en español
+   - Historial de conversación contextual
+
+## 🚨 Solución de Problemas
+
+```bash
+# Verificar salud de OpenSearch
+curl "http://localhost:9200/_cat/health?v"
+
+# Estadísticas de Redis
+redis-cli INFO
+
+# Probar conexión a ChromaDB
+curl "http://chromadb:8001/api/v1/heartbeat"
+```
+
+## 📄 Licencia
+
+MIT License - Ver [LICENSE](LICENSE) para más detalles.
+```
+
+### Mejoras incluidas:
+
+1. **Diagrama de arquitectura** con Mermaid
+2. **Sección organizada por servicios** con ejemplos prácticos de CURL
+3. **Tabla comparativa** del stack tecnológico
+4. **Variables de entorno clave** documentadas
+5. **Comandos de solución de problemas** por servicio
+6. **Detalles específicos** para cada componente:
+   - Versiones mínimas
+   - Puertos expuestos
+   - Uso principal
+
