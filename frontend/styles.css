@@ -1,130 +1,106 @@
-/* Estilo Matrix Terminal */
+/* Fondo estilo Matrix */
 body {
-    background-color: #000;
-    color: #00ff41;
+    background-color: #000000;
+    color: #00ff41; /* Verde Matrix */
     font-family: 'Courier New', monospace;
     margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    padding: 20px;
+    overflow-x: hidden;
 }
 
-/* Efecto de escaneo (opcional) */
-body::after {
+/* Efecto de "lluvia de código" (opcional) */
+body::before {
     content: "";
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 255, 65, 0.1) 0%,
-        transparent 5%,
-        transparent 95%,
-        rgba(0, 255, 65, 0.1) 100%
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 65, 0.1),
+        rgba(0, 255, 65, 0.1) 1px,
+        transparent 1px,
+        transparent 10px
     );
     pointer-events: none;
-    z-index: 100;
-    animation: scan 8s linear infinite;
+    z-index: -1;
 }
 
-@keyframes scan {
-    0% { top: -100%; }
-    100% { top: 100%; }
-}
-
-/* Terminal Container */
-#terminal {
-    background-color: rgba(0, 0, 0, 0.85);
-    border: 2px solid #00ff41;
-    box-shadow: 0 0 20px #00ff41;
-    margin: 20px;
-    padding: 15px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-/* Chatbox (Historial) */
+/* Contenedor del chat */
 #chatbox {
-    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid #00ff41;
+    border-radius: 5px;
+    height: 70vh;
+    padding: 15px;
     overflow-y: auto;
-    padding: 10px;
-    border-bottom: 1px solid #00ff41;
-    margin-bottom: 10px;
+    box-shadow: 0 0 10px #00ff41;
 }
 
-/* Input Container */
-#input-container {
-    display: flex;
-    align-items: center;
-}
-
-/* Prompt Style */
-#prompt {
+/* Mensajes de usuario (verde Matrix) */
+.user-message {
     color: #00ff41;
-    margin-right: 10px;
-    white-space: nowrap;
-}
-
-/* Input Text */
-#user-input {
-    background: transparent;
-    border: none;
-    color: #00ff41;
-    font-family: 'Courier New', monospace;
-    font-size: 16px;
-    width: 100%;
-    outline: none;
-    caret-color: #00ff41;
-}
-
-/* Mensajes */
-.user-message::before {
-    content: "> ";
-    color: #00ff41;
-}
-
-.bot-message::before {
-    content: "> ";
-    color: #00ff41;
-    opacity: 0.7;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(0, 255, 65, 0.1);
-}
-
-::-webkit-scrollbar-thumb {
-    background: #00ff41;
-    border-radius: 4px;
-}
-
-/* Añade esto a tu styles.css */
-.bot-message {
-    color: #00ff41 !important; /* Verde Matrix brillante */
-    text-shadow: 0 0 5px #00ff41; /* Efecto neón */
-    opacity: 1 !important;
     margin: 10px 0;
-    line-height: 1.5;
+    text-shadow: 0 0 5px #00ff41;
 }
 
+/* Mensajes del bot (blanco) */
+.bot-message {
+    color: #00ff41 !important;  /* Cambiado a blanco */
+    margin: 10px 0;
+    font-style: italic;
+}
+
+/* Efecto de "typing" (blanco) */
 .typing {
-    color: #00ffaa !important; /* Verde más claro para el "escribiendo..." */
-    border-right: 2px solid #00ff41;
+    color: #00ff41 !important;  /* Cambiado a blanco */
+    border-right: 2px solid #ffffff; /* Borde blanco */
     animation: blink 1s step-end infinite;
 }
 
-/* Asegura contraste en todos los elementos */
-#terminal {
-    background-color: rgba(0, 10, 0, 0.9) !important; /* Fondo oscuro con tono verde */
+/* Input y botón (verde Matrix) */
+#user-input {
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 10px;
+    width: 70%;
+    font-family: 'Courier New', monospace;
+}
+
+#send-btn {
+    background: #000;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Courier New', monospace;
+}
+
+#send-btn:hover {
+    background: #00ff41;
+    color: #000;
+    text-shadow: 0 0 5px #000;
+}
+
+/* Animación del cursor (verde) */
+@keyframes blink {
+    from, to { border-color: transparent }
+    50% { border-color: #ffffff } /* Cambiado a blanco para coincidir con el typing */
+}
+
+/* Barra de scroll personalizada (verde) */
+#chatbox::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chatbox::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#chatbox::-webkit-scrollbar-thumb {
+    background: #00ff41;
+    border-radius: 4px;
 }
